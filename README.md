@@ -7,114 +7,68 @@
 <p align="center">
   <img src="assets\architecture.jpg" width="400" height="300">
 
-### Installing
+## Installing
+
+### Data Preprocessing Part
+Soon we will release a drive link which will contain all the necessary files to run the code. For now, we will explain how to generate the files required for training.
 
 1. Fetch the PDB files
-```
-python scripts\preprocessing_scripts\preprocess.py
-```
+    ```
+    python scripts\preprocessing_scripts\preprocess.py
+    ```
 2. Calculation the distances between c_alpha items in the pdb files
-```
-python scripts\preprocessing_scripts\distance.py
-```
+    ```
+    python scripts\preprocessing_scripts\distance.py
+    ```
 
-The following program has been tested using python 3.9.2.
-Using `run.sh` will create and activate a virtualenv, install all necessary
-dependencies and run a test program to ensure that you can import all the
-modules.
-1. To download the pdb files run the script 
-<!-- insert link https://www.rcsb.org/docs/programmatic-access/batch-downloads-with-shell-script --> 
-<>
+3. For language model training we need files with pdbids so we can map the sequence with the respective adjacency matrix. To generate the `df_final.xlsx, cb513_final.xlsx`, etc... files run the following `notebooks/data_prepare.ipynb` notebook and also change the path accordingly.
 
-```
-# Run from the parent directory.
-CUDA_VISIBLE_DEVICES=0 python scripts/train/MultiModal/train_with2lr.py
+4. After generating the excel file generate the text file containing primary, secondary sequences either in q8 or q3 depending on the task and pdbids. To get the .txt file run `notebooks/pdbfile_process.ipynb`notebook.
 
-```
+5. After generating the distance file and .txt files, we can generate the graph file containing the adjacency matrix by running the following command.
 
-To run the provided code, use this virtualenv:
+    5.1. For relational data run
 
-```
-source /tmp/adversarial_robustness_venv/bin/activate
-```
+    ```
+    python scripts/preprocessing_scripts/adjacency_relational.py
+    ```
 
-You may want to edit `requirements.txt` before running `run.sh` if GPU support
-is needed (e.g., use `jaxline==0.1.67+cuda111`). See JAX's installation
-[instructions](https://github.com/google/jax#installation) for more details.
+    5.2 For non-relational data run
 
-### Using pre-trained models
+    ```
+    python scripts/preprocessing_scripts/adjacency.py
+    ```
 
-Once downloaded, a model can be evaluated by running the `eval.py` script in
-either the `jax` or `pytorch` folders. E.g.:
+6. Last peice of input we required is sequence ids which will be required by the language model in the huggingface format i.e. input_ids, attention_mask, labels, token_type_ids, to generate this file run `notebooks/prepare_raw_tokenization_file.ipynb` notebook and it will generate all the necessary pickle files.
 
-```
-cd jax
-python3 eval.py \
-  --ckpt=${PATH_TO_CHECKPOINT} --depth=70 --width=16 --dataset=cifar10
-```
+**Note** : To switch from q3 to q8 or vice-versa uncomment the commented code for q3 or q8 respectively.
 
-These models are also directly available within
-[RobustBench](https://github.com/RobustBench/robustbench#model-zoo-quick-tour)'s
-model zoo.
+### Training Files
 
-### Training your own model
+* Make sure to check the configuration before running any training script and adjust it accordingly.
 
-We also provide a training pipeline that reproduces results from both
-publications. This pipeline uses [Jaxline](https://github.com/deepmind/jaxline)
-and is written using [JAX](https://github.com/google/jax) and
-[Haiku](https://github.com/deepmind/dm-haiku). To train a model, modify the
-configuration in the `get_config()` function of `jax/experiment.py` and issue
-the following command from within the virtualenv created above:
+* Make sure to modify the relational or non-relational dataset as well as the model in the training script.
 
-```
-cd jax
-python3 train.py --config=experiment.py
-```
+* To tune and search for the best hyperparameters using wandb's sweep run the following command:
 
-The training pipeline can run with multiple worker machines and multiple devices
-(either GPU or TPU). See [Jaxline](https://github.com/deepmind/jaxline) for more
-details.
+    ```
+    CUDA_VISIBLE_DEVICES=0 python scripts/train/MultiModal/train_with_sweep.py
+    ```
 
-We do not provide a PyTorch implementation of our training pipeline. However,
-you may find one on GitHub, e.g.,
-[adversarial_robustness_pytorch](https://github.com/imrahulr/adversarial_robustness_pytorch)
-(by Rahul Rade).
+* To train the baseline model run the following command:
 
-## Datasets
+    ```
+    CUDA_VISIBLE_DEVICES=0 python scripts/train/MultiModal/train_baseline.py
+    ```
 
-### Extracted dataset
+* To train the model without wandb run the following command:
 
-Gowal et al. (2020) use samples extracted from
-[TinyImages-80M](https://groups.csail.mit.edu/vision/TinyImages/).
-Unfortunately, since then, the official TinyImages-80M dataset has been
-withdrawn (due to the presence of offensive images). As such, we cannot provide
-a download link to our extrated data until we have manually verified that all
-extracted images are not offensive. If you want to reproduce our setup, consider
-the generated datasets below. We are also happy to help, so feel free to reach
-out to Sven Gowal directly.
+    ```
+    CUDA_VISIBLE_DEVICES=0 python scripts/train/MultiModal/train_without_wandb.py
+    ```
 
-### Generated datasets
+* To train the baseline model using trainer run `scripts/train/MultiModal/supplement_training_files/ProtBert-BFD-FineTune-SS3.py` file.
 
-Rebuffi et al. (2021) and Gowal et al. (2021) use samples generated by a
-Denoising Diffusion Probabilistic Model
-[(DDPM; Ho et al., 2020)](https://arxiv.org/abs/2006.11239)
-to improve robustness. The DDPM is solely trained on the original training data
-and does not use additional external data. The following table links to datasets
-of 1M **generated** samples for CIFAR-10, CIFAR-100 and SVHN.
-
-| dataset | model | size | link |
-|---|---|:---:|:---:|
-| CIFAR-10 | DDPM | 1M | [npz](https://storage.googleapis.com/dm-adversarial-robustness/cifar10_ddpm.npz) |
-| CIFAR-100 | DDPM | 1M | [npz](https://storage.googleapis.com/dm-adversarial-robustness/cifar100_ddpm.npz) |
-| SVHN | DDPM | 1M | [npz](https://storage.googleapis.com/dm-adversarial-robustness/svhn_ddpm.npz) |
-
-To load each dataset, use NumPy. E.g.:
-
-```
-npzfile = np.load('cifar10_ddpm.npz')
-images = npzfile['image']
-labels = npzfile['label']
-```
-<!-- insert image  -->
-
-![Results Table](assets\Result.png)
+## Results
+-----------------
+![Results Table](assets/result.png)
