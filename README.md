@@ -71,4 +71,4 @@ Soon we will release a drive link which will contain all the necessary files to 
 
 ## Results
 -----------------
-![Results Table](assets/result.png)
+![Results Table](assets/Result.png)
