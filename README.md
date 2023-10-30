@@ -15,7 +15,10 @@
 ## Installation & Usage:
 
 ### Prerequisites:
-Before you begin, ensure you have the required dependencies installed. (You can list them here or provide a `requirements.txt` file.)
+Before you begin, ensure you have the required dependencies installed. You can install them using the following command:
+```bash
+pip install -r requirements.txt
+```
 
 ### Data Preprocessing:
 
