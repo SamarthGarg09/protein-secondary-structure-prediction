@@ -52,19 +52,19 @@ Soon we will release a drive link which will contain all the necessary files to 
 * To tune and search for the best hyperparameters using wandb's sweep run the following command:
 
     ```
-    CUDA_VISIBLE_DEVICES=0 python scripts/train/MultiModal/train_with_sweep.py
+    CUDA_VISIBLE_DEVICES=0 python scripts/train/train_with_sweep.py
     ```
 
 * To train the baseline model run the following command:
 
     ```
-    CUDA_VISIBLE_DEVICES=0 python scripts/train/MultiModal/train_baseline.py
+    CUDA_VISIBLE_DEVICES=0 python scripts/train/train_baseline.py
     ```
 
 * To train the model without wandb run the following command:
 
     ```
-    CUDA_VISIBLE_DEVICES=0 python scripts/train/MultiModal/train_without_wandb.py
+    CUDA_VISIBLE_DEVICES=0 python scripts/train/train_without_wandb.py
     ```
 
 * To train the baseline model using trainer run `scripts/train/MultiModal/supplement_training_files/ProtBert-BFD-FineTune-SS3.py` file.
